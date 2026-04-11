@@ -1,26 +1,48 @@
 import streamlit as st
 import pandas as pd
-from tensorflow.keras.models import load_model
-
-# Load model
-model = load_model('models/model.h5')
+import pickle
+import os
 
 st.title("🧠 Neural Network Prediction App")
+
+# -----------------------------
+# Cached model loader
+# -----------------------------
+@st.cache_resource
+def load_model():
+    model_path = os.path.join("models", "model.pkl")
+
+    if not os.path.exists(model_path):
+        st.error("❌ Model file not found")
+        st.stop()
+
+    with open(model_path, "rb") as f:
+        model = pickle.load(f)
+
+    return model
+
+
+model = load_model()
+
+st.success("✅ Model loaded successfully")
 st.write("Enter input values:")
 
-# Create dynamic inputs
-input_data = []
+# -----------------------------
+# FIX: set feature count manually
+# -----------------------------
+num_features = 8
 
-num_features = model.input_shape[1]
+input_data = []
 
 for i in range(num_features):
     val = st.number_input(f"Feature {i+1}", value=0.0)
     input_data.append(val)
 
-# Predict
+# -----------------------------
+# Prediction
+# -----------------------------
 if st.button("Predict"):
     input_df = pd.DataFrame([input_data])
-
     prediction = model.predict(input_df)
 
-    st.success(f"Prediction: {prediction[0][0]:.4f}")
+    st.success(f"Prediction: {prediction[0]}")
